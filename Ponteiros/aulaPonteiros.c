@@ -1,5 +1,13 @@
 #include <stdio.h>
 
+// int strlen(char *s)
+// {
+//     char *p = s;
+//     while (*s != '\0')
+//         s++;
+//     return (int)(s - p);
+// }
+
 int main()
 {
     // int a = 10;
@@ -36,16 +44,40 @@ int main()
     //     printf("%d | ", *pv);
     //     pv--;
     // }
-    
 
-    int mat[2][3] = {{1,2,3},{4,5,6}};
-    int i, *p = &mat[0][0];
+    // int mat[2][3] = {{1,2,3},{4,5,6}};
+    // int i, *p = &mat[0][0];
 
-    for (i = 0; i < 6; i++)
-    {
-        printf("%d | ", *p);
-        p++;
-    }
+    // for (i = 0; i < 6; i++)
+    // {
+    //     printf("%d | ", *p);
+    //     p++;
+    // }
+
+    // int vet[6] = {1,2,3,4,5,6};
+    // int i;
+
+    // for (i = 0; i < 6; i++)
+    // {
+    //     printf("%d | ", *(vet+i));
+    // }
+
+    // int i;
+    // char *p;
+    // char frase[] = {"Aprendendo a usar ponteiros!"};
+    // /*acessando os elementos do vetor diretamente pelo
+    // nome*/
+    // for (i = 0; frase[i] != '\0'; i++)
+    //     putchar(frase[i]);
+    // /*acessando os elementos do vetor indiretamente por
+    // meio de ponteiro*/
+    // for (p = frase; *p != '\0'; p++)
+    //     putchar(*p);
+
+    // char nome[100];
+    // printf("Digite uma string :");
+    // gets(nome);
+    // printf("\nTamanho da string : % d", strlen(nome));
 
     return 0;
 }
