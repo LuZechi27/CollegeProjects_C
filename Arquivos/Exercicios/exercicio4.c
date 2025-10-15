@@ -35,70 +35,90 @@ deverá exibir todos).
 
 typedef struct
 {
-    char nome[30];
+    char *nome;
     char prontuario[9];
     float notas_provas[3];
     float notas_trabalho[2];
 } Aluno;
 
-int ler_alunos_arq(Aluno *aluno)
+int ler_alunos_arq(Aluno **alunos, int *tamanho_vet)
 {
     FILE *arq;
-    int i, j;
-    char c, *str;
+    int i, j, len;
 
-    str = (char *)malloc(30 * sizeof(char));
-
-    if ((arq = fopen("C:/Users/LGPHP/Documents/VSCode Programas/Luiz/APR2/Arquivos/Exercicios/Notas_AP2S2.bin", "rb+")) == NULL)
+    if ((arq = fopen("Notas_AP2S2.bin", "rb+")) == NULL)
     {
         perror("Erro ao abrir o arquivo");
+        fclose(arq);
         return 0;
     }
-    for (i = 0; !feof(arq); i++)
+    /*
+    Conteúdo do arquivo:
+
+    [numero de elementos do vetor]
+    [tamanho do nome][nome][prontuario][vetor das notas das provas][vet. notas trabalho]
+    [tamanho do nome][nome][prontuario][vetor das notas das provas][vet. notas trabalho]
+    [tamanho do nome][nome][prontuario][vetor das notas das provas][vet. notas trabalho]
+    ...
+    */
+    fread(tamanho_vet, sizeof(int), 1, arq);
+    *alunos = (Aluno *)malloc((*tamanho_vet) * sizeof(Aluno));
+    for (i = 0; i < *tamanho_vet; i++)
     {
-        c = ' ';
-        j = 0;
-        while (c != '\0' && !feof(arq));
+        fread(&len, sizeof(int), 1, arq);
+        (*alunos)[i].nome = (char *)malloc(len * sizeof(char));
+        if ((*alunos)[i].nome == NULL)
         {
-            fread(&c, sizeof(char), 1, arq);
-            str[j] = c;
-            if (ferror(arq))
-            {
-                printf("%d, %d",i ,j);
-                perror("Erro na leitura do nome");
-                return 0;
-            }
-            j++;
-        }
-        strcpy(aluno[i].nome, str);
-        printf("%s", str);
-        if (feof(arq))
-        {
+            fclose(arq);
+            free(*alunos);
+            free((*alunos)[i].nome);
             return 0;
         }
-
-        if ((fread(aluno[i].prontuario, sizeof(char), 9, arq)) != 9)
+        if ((fread((*alunos)[i].nome, sizeof(char), len, arq)) != len)
+        {
+            perror("Erro na leitura do nome");
+            fclose(arq);
+            free(*alunos);
+            free((*alunos)[i].nome);
+            return 0;
+        }
+        if ((fread((*alunos)[i].prontuario, sizeof(char), 9, arq)) != 9)
         {
             perror("Erro na leitura do prontuario");
+            fclose(arq);
+            free(*alunos);
+            free((*alunos)[i].nome);
             return 0;
         }
-        if ((fread(aluno[i].notas_provas, sizeof(float), 3, arq)) != 3)
+        if ((fread((*alunos)[i].notas_provas, sizeof(float), 3, arq)) != 3)
         {
             perror("Erro na leitura das notas das provas");
+            fclose(arq);
+            free(*alunos);
+            free((*alunos)[i].nome);
             return 0;
         }
-        if ((fread(aluno[i].notas_trabalho, sizeof(float), 2, arq)) != 2)
+        if ((fread((*alunos)[i].notas_trabalho, sizeof(float), 2, arq)) != 2)
         {
             perror("Erro na leitura das notas dos trabalhos");
+            fclose(arq);
+            free(*alunos);
+            free((*alunos)[i].nome);
             return 0;
         }
         if (ferror(arq))
         {
             perror("Erro");
+            fclose(arq);
+            free(*alunos);
+            free((*alunos)[i].nome);
             return 0;
         }
         if (feof(arq))
         {
+            fclose(arq);
+            free(*alunos);
+            free((*alunos)[i].nome);
             return 0;
         }
     }
@@ -109,42 +129,57 @@ int ler_alunos_arq(Aluno *aluno)
 int gravar_alunos_arq(Aluno *alunos, int tamanho)
 {
     FILE *arq;
-    int i, j;
+    int i, j, len;
 
     if ((arq = fopen("Notas_AP2S2.bin", "wb+")) == NULL)
     {
         perror("Erro ao abrir o arquivo");
+        fclose(arq);
         return 0;
     }
+    /*
+    Conteúdo do arquivo:
+
+    [numero de elementos do vetor]
+    [tamanho do nome][nome][prontuario][vetor das notas das provas][vet. notas trabalho]
+    [tamanho do nome][nome][prontuario][vetor das notas das provas][vet. notas trabalho]
+    [tamanho do nome][nome][prontuario][vetor das notas das provas][vet. notas trabalho]
+    ...
+    */
+    fwrite(&tamanho, sizeof(int), 1, arq);
     for (i = 0; i < tamanho; i++)
     {
-        for (j = 0; alunos[i].nome[j] != '\0'; j++)
-            fwrite(&alunos[i].nome[j], sizeof(char), 1, arq);
-        
-        fwrite(&alunos[i].nome[j], sizeof(char), 1, arq);
-        if (ferror(arq))
+        len = strlen(alunos[i].nome) + 1;
+        fwrite(&len, sizeof(int), 1, arq);
+    
+        if (fwrite(alunos[i].nome, sizeof(char), len, arq) != len)
         {
             perror("Erro na gravacao do nome");
+            fclose(arq);
             return 0;
         }
         if ((fwrite(alunos[i].prontuario, sizeof(char), 9, arq)) != 9)
         {
             perror("Erro na gravacao do prontuario");
+            fclose(arq);
             return 0;
         }
         if ((fwrite(alunos[i].notas_provas, sizeof(float), 3, arq)) != 3)
         {
             perror("Erro na gravacao das notas das provas");
+            fclose(arq);
             return 0;
         }
         if ((fwrite(alunos[i].notas_trabalho, sizeof(float), 2, arq)) != 2)
         {
             perror("Erro na gravacao das notas dos trabalhos");
+            fclose(arq);
             return 0;
         }
         if (ferror(arq))
         {
             perror("Erro");
+            fclose(arq);
             return 0;
         }
     }
@@ -155,57 +190,78 @@ int gravar_alunos_arq(Aluno *alunos, int tamanho)
 int main()
 {
     FILE *arq_notas;
-    Aluno aluno[4];
-
-    strcpy(aluno[0].nome, "Maria");
-    strcpy(aluno[0].prontuario, "sc365987");
-    aluno[0].notas_provas[0] = 6.5;
-    aluno[0].notas_provas[1] = 4.0;
-    aluno[0].notas_provas[2] = 7.5;
-    aluno[0].notas_trabalho[0] = 5.0;
-    aluno[0].notas_trabalho[1] = 7.8;
-
-    strcpy(aluno[1].nome, "Roberto");
-    strcpy(aluno[1].prontuario, "sc569874");
-    aluno[1].notas_provas[0] = 4.5;
-    aluno[1].notas_provas[1] = 3.0;
-    aluno[1].notas_provas[2] = 6.0;
-    aluno[1].notas_trabalho[0] = 5.0;
-    aluno[1].notas_trabalho[1] = 8.6;
-
-    strcpy(aluno[2].nome, "Carlos");
-    strcpy(aluno[2].prontuario, "sc222222");
-    aluno[2].notas_provas[0] = 7.0;
-    aluno[2].notas_provas[1] = 8.0;
-    aluno[2].notas_provas[2] = 9.0;
-    aluno[2].notas_trabalho[0] = 10.0;
-    aluno[2].notas_trabalho[1] = 10.0;
-
-    strcpy(aluno[3].nome, "Pedro");
-    strcpy(aluno[3].prontuario, "sc112141");
-    aluno[3].notas_provas[0] = 9.0;
-    aluno[3].notas_provas[1] = 6.0;
-    aluno[3].notas_provas[2] = 10.0;
-    aluno[3].notas_trabalho[0] = 7.0;
-    aluno[3].notas_trabalho[1] = 5.0;
-
-    if (!gravar_alunos_arq(aluno, 4))
-    {
-        perror("Erro");
-        exit(0);
-    }
-
-    printf("Gravado com sucesso");
-
-    if (!ler_alunos_arq(aluno))
-    {
-        perror("Erro");
-        exit(0);
-    }
-        
+    Aluno *alunos;
+    int i, tamanho;
     
-    printf("arquivo lido com sucesso");
+    if (!ler_alunos_arq(&alunos, &tamanho))
+    {
+        printf("Erro");
+        alunos = (Aluno *)malloc(4 * sizeof(Aluno));
+        tamanho = 4;
+
+        alunos[0].nome = (char *)malloc(6 * sizeof(char));
+        strcpy(alunos[0].nome, "Maria");
+        strcpy(alunos[0].prontuario, "sc365987");
+        alunos[0].notas_provas[0] = 6.5;
+        alunos[0].notas_provas[1] = 4.0;
+        alunos[0].notas_provas[2] = 7.5;
+        alunos[0].notas_trabalho[0] = 5.0;
+        alunos[0].notas_trabalho[1] = 7.8;
 
 
+        alunos[1].nome = (char *)malloc(8 * sizeof(char));
+        strcpy(alunos[1].nome, "Roberto");
+        strcpy(alunos[1].prontuario, "sc569874");
+        alunos[1].notas_provas[0] = 4.5;
+        alunos[1].notas_provas[1] = 3.0;
+        alunos[1].notas_provas[2] = 6.0;
+        alunos[1].notas_trabalho[0] = 5.0;
+        alunos[1].notas_trabalho[1] = 8.6;
+
+        alunos[2].nome = (char *)malloc(7 * sizeof(char));
+        strcpy(alunos[2].nome, "Carlos");
+        strcpy(alunos[2].prontuario, "sc222222");
+        alunos[2].notas_provas[0] = 7.0;
+        alunos[2].notas_provas[1] = 8.0;
+        alunos[2].notas_provas[2] = 9.0;
+        alunos[2].notas_trabalho[0] = 10.0;
+        alunos[2].notas_trabalho[1] = 10.0;
+
+        alunos[3].nome = (char *)malloc(6 * sizeof(char));
+        strcpy(alunos[3].nome, "Pedro");
+        strcpy(alunos[3].prontuario, "sc112141");
+        alunos[3].notas_provas[0] = 9.0;
+        alunos[3].notas_provas[1] = 6.0;
+        alunos[3].notas_provas[2] = 10.0;
+        alunos[3].notas_trabalho[0] = 7.0;
+        alunos[3].notas_trabalho[1] = 5.0;
+    }
+    else 
+    {
+        printf("arquivo lido com sucesso\n");
+    }
+    for (i = 0; i < tamanho; i++)
+    {
+        puts(alunos[i].nome);
+    }
+    
+
+    
+
+    if (!gravar_alunos_arq(alunos, 4))
+    {
+        perror("Erro");
+        exit(0);
+    }
+    else 
+    {
+        printf("Gravado com sucesso");
+    }
+    for (i = 0; i < tamanho; i++)
+    {
+        free(alunos[i].nome);
+    }
+    free(alunos);
+    
     return 0;
 }
