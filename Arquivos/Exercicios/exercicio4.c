@@ -49,7 +49,6 @@ int ler_alunos_arq(Aluno **alunos, int *tamanho_vet)
     if ((arq = fopen("Notas_AP2S2.bin", "rb+")) == NULL)
     {
         perror("Erro ao abrir o arquivo");
-        fclose(arq);
         return 0;
     }
     /*
