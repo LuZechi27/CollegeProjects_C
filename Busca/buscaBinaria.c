@@ -10,6 +10,7 @@ cada estratégia para encontrar o elemento procurado.
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <locale.h>
 
 void merge(int *vec, int *temp, int inicio, int meio, int fim)
 {
@@ -67,12 +68,17 @@ int buscaSequencial(int *vec, int numero, int tamanho, int *comp)
     int i;
     for (i = 0; i < tamanho; i++)
     {
+        (*comp)++;
         if (vec[i] == numero)
         {
             (*comp)++;
             return i;
         }
-        (*comp)++;
+        else if (vec[i] > numero)
+        {
+            (*comp)++;
+            return -1;
+        }
     }
     return -1;
 }
@@ -110,6 +116,7 @@ int buscaBinaria(int *vec, int inicio, int fim, int num, int *comp)
 
 int main()
 {
+    setlocale(LC_ALL, "Portuguese");
     srand(time(NULL));
 
     int *vector = (int *)malloc(500 * sizeof(int));
